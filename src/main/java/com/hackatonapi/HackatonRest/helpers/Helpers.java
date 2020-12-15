@@ -2,6 +2,7 @@ package com.hackatonapi.HackatonRest.helpers;
 
 import com.hackatonapi.HackatonRest.entity.NamedEntity;
 
+import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -31,5 +32,12 @@ public final class Helpers {
 
             return ((NamedEntity) o).getName().equals(searchTerm);
         });
+    }
+
+    public static boolean isWithinRange(
+            ZonedDateTime dateTime,
+            ZonedDateTime start,
+            ZonedDateTime end){
+        return !(dateTime.isBefore(start) || dateTime.isAfter(end));
     }
 }

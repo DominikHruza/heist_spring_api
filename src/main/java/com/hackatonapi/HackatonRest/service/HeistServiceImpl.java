@@ -3,6 +3,7 @@ package com.hackatonapi.HackatonRest.service;
 import com.hackatonapi.HackatonRest.DTO.HeistDTO;
 import com.hackatonapi.HackatonRest.DTO.RequiredSkillDTO;
 import com.hackatonapi.HackatonRest.entity.Heist;
+import com.hackatonapi.HackatonRest.entity.HeistStatus;
 import com.hackatonapi.HackatonRest.entity.RequiredSkill;
 import com.hackatonapi.HackatonRest.entity.Skill;
 import com.hackatonapi.HackatonRest.exception.DuplicateResourceEntryException;
@@ -39,7 +40,8 @@ public class HeistServiceImpl implements HeistService {
                 heistDTO.getName(),
                 heistDTO.getLocation(),
                 heistDTO.getStartTime(),
-                heistDTO.getEndTime()
+                heistDTO.getEndTime(),
+                HeistStatus.PLANNING
         );
 
         try {

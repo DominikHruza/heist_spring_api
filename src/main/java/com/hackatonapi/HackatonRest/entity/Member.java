@@ -27,7 +27,15 @@ public class Member extends NamedEntity{
     private Skill mainSkill;
 
    @OneToMany(mappedBy = "member")
-   List<MemberSkillLevel> memberSkillLevels = new ArrayList<>();
+   private List<MemberSkillLevel> memberSkillLevels = new ArrayList<>();
+
+   @ManyToMany
+   @JoinTable(
+           name = "member_heist",
+           joinColumns = @JoinColumn(name = "member_id"),
+           inverseJoinColumns = @JoinColumn(name = "heist_id")
+   )
+   private List<Heist> heists = new ArrayList<>();
 
     public Member() {}
 
@@ -45,6 +53,10 @@ public class Member extends NamedEntity{
 
     public void addMemberSkillLevel(MemberSkillLevel memberSkillLevel){
         memberSkillLevels.add(memberSkillLevel);
+    }
+
+    public void addToHeists(Heist heist){
+        heists.add(heist);
     }
 
     public MemberStatus getStatus() {

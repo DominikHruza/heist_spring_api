@@ -60,4 +60,28 @@ public class ExceptionHandler extends ResponseEntityExceptionHandler {
         );
         return new ResponseEntity<>(errorResponse, badRequest);
     }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(value = InvalidParticipantException.class)
+    public ResponseEntity<Object> handleResourceNotFound(
+            InvalidParticipantException exception) {
+        HttpStatus badRequest = HttpStatus.BAD_REQUEST;
+        ErrorResponse errorResponse = new ErrorResponse(
+                badRequest,
+                exception.getMessage(),
+                ZonedDateTime.now(ZoneId.of("Z"))
+        );
+        return new ResponseEntity<>(errorResponse, badRequest);
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(value = InvalidHeistStatusException.class)
+    public ResponseEntity<Object> handleResourceNotFound(
+            InvalidHeistStatusException exception) {
+        HttpStatus badRequest = HttpStatus.METHOD_NOT_ALLOWED;
+        ErrorResponse errorResponse = new ErrorResponse(
+                badRequest,
+                exception.getMessage(),
+                ZonedDateTime.now(ZoneId.of("Z"))
+        );
+        return new ResponseEntity<>(errorResponse, badRequest);
+    }
 }

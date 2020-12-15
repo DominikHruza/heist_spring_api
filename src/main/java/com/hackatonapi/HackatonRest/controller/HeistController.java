@@ -41,4 +41,11 @@ public class HeistController {
     public EligibleMembersDTO getEligibleMembers(@PathVariable Long heistId){
        return heistFacade.getEligibleMembers(heistId);
     }
+
+    //SBSS-07 Confirm participants
+    @PutMapping(value = "/{heist_id}/members")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void confirmParticipants(@PathVariable Long heist_id, @RequestBody ParticipantsDTO participants){
+        heistFacade.confirmParticipants(heist_id, participants);
+    }
 }
