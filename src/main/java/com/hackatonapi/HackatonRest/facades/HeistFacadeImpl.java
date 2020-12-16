@@ -4,6 +4,7 @@ import com.hackatonapi.HackatonRest.DTO.*;
 import com.hackatonapi.HackatonRest.entity.Heist;
 import com.hackatonapi.HackatonRest.entity.HeistStatus;
 import com.hackatonapi.HackatonRest.entity.Member;
+import com.hackatonapi.HackatonRest.entity.MemberStatus;
 import com.hackatonapi.HackatonRest.exception.InvalidHeistStatusException;
 import com.hackatonapi.HackatonRest.exception.ResourceNotFoundException;
 import com.hackatonapi.HackatonRest.mappers.MemberMapper;
@@ -65,13 +66,29 @@ public class HeistFacadeImpl implements HeistFacade {
        if(!heistOpt.isPresent()){
            throw new ResourceNotFoundException("Heist with id " + heistId + " does not exist.");
        }
-       requiredSkillsService.bulkAddRequiredSkills(heistOpt.get().getName(), requiredSkillDTOs.getSkills());
+
+        Heist heist = heistOpt.get();
+        if(heist.getStatus().equals(HeistStatus.IN_PROGRESS) ||
+               heist.getStatus().equals(HeistStatus.READY)){
+           throw new InvalidHeistStatusException(
+                   "Cannot change required skills at this heist stage.");
+       }
+       requiredSkillsService.bulkAddRequiredSkills(heist.getName(), requiredSkillDTOs.getSkills());
     }
 
     @Override
     public EligibleMembersDTO getEligibleMembers(Long heistId) {
-        if(!heistRepository.findById(heistId).isPresent()){
+        Optional<Heist> heistOptional = heistRepository.findById(heistId);
+        if(!heistOptional.isPresent()){
             throw new ResourceNotFoundException("Heist with id " + heistId + " does not exist.");
+        }
+
+        HeistStatus heistStatus = heistOptional.get().getStatus();
+        if(heistStatus.equals(HeistStatus.READY) ||
+                heistStatus.equals(HeistStatus.IN_PROGRESS)){
+            throw new InvalidHeistStatusException(
+                    "Heist is in status " + heistStatus + " cannot show members"
+            );
         }
 
         List<RequiredSkillDTO> requiredSkillDTOS =
@@ -121,7 +138,8 @@ public class HeistFacadeImpl implements HeistFacade {
             memberService.isValidHeistMember(
                     memberDTO,
                     requiredSkillsOfHeist,
-                    heist.getStartTime());
+                    heist.getStartTime(),
+                    heist.getEndTime());
 
             //if validation does not throw errors make saves
             heist.setStatus(HeistStatus.READY);
@@ -129,10 +147,6 @@ public class HeistFacadeImpl implements HeistFacade {
             member.addToHeists(heist);
             memberRepository.save(member);
             heistRepository.save(heist);
-
         }
     }
-
-
-
 }

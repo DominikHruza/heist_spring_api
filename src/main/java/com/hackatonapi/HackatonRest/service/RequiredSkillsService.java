@@ -10,4 +10,5 @@ public interface RequiredSkillsService {
             List<RequiredSkillDTO> requiredSkillDTOs);
 
     List<RequiredSkillDTO> findRequiredSkillsOfHeist(Long heistId);
+    List<RequiredSkillDTO> getRequiredSkills(Long heistId);
 }

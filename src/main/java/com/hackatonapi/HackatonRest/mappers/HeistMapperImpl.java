@@ -3,6 +3,7 @@ package com.hackatonapi.HackatonRest.mappers;
 import com.hackatonapi.HackatonRest.DTO.HeistDTO;
 import com.hackatonapi.HackatonRest.DTO.RequiredSkillDTO;
 import com.hackatonapi.HackatonRest.entity.Heist;
+import com.hackatonapi.HackatonRest.entity.HeistStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -31,7 +32,8 @@ public class HeistMapperImpl implements HeistMapper {
                 heist.getLocation(),
                 heist.getStartTime(),
                 heist.getEndTime(),
-                requiredSkillDTOS
+                requiredSkillDTOS,
+                heist.getStatus()
         );
     }
 }

@@ -1,8 +1,10 @@
 package com.hackatonapi.HackatonRest.mappers;
 
+import com.hackatonapi.HackatonRest.DTO.CurrentHeistMemberDTO;
 import com.hackatonapi.HackatonRest.DTO.MemberDTO;
 import com.hackatonapi.HackatonRest.DTO.MemberSkillDTO;
 import com.hackatonapi.HackatonRest.entity.Member;
+import com.hackatonapi.HackatonRest.entity.MemberSkillLevel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -29,14 +31,8 @@ public class MemberMapperImpl implements MemberMapper {
         String status = member.getStatus().name();
 
         List<MemberSkillDTO> memberSkillDTOList =
-                member
-                .getMemberSkillLevels()
-                .stream()
-                .map(skillLevel -> {
-                   return skillLevelMapper
-                            .skillLevelToSkillLevelDTO(skillLevel);
-                })
-                .collect(Collectors.toList());
+                mapMemberSkills(member.getMemberSkillLevels());
+
 
         return new MemberDTO(
                 name,
@@ -48,4 +44,23 @@ public class MemberMapperImpl implements MemberMapper {
         );
     }
 
+    @Override
+    public CurrentHeistMemberDTO memberToCurrentHeistMemberDTO(Member member) {
+        List<MemberSkillDTO> memberSkillDTOS = mapMemberSkills(member.getMemberSkillLevels());
+        return new CurrentHeistMemberDTO(
+                member.getName(),
+                memberSkillDTOS
+        );
+    }
+
+
+    private List<MemberSkillDTO> mapMemberSkills(List<MemberSkillLevel> memberSkillLevel) {
+        return memberSkillLevel
+                .stream()
+                .map(skillLevel -> {
+                    return skillLevelMapper
+                            .skillLevelToSkillLevelDTO(skillLevel);
+                })
+                .collect(Collectors.toList());
+    }
 }

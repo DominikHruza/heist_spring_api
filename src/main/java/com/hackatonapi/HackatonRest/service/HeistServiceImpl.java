@@ -1,14 +1,16 @@
 package com.hackatonapi.HackatonRest.service;
 
-import com.hackatonapi.HackatonRest.DTO.HeistDTO;
-import com.hackatonapi.HackatonRest.DTO.RequiredSkillDTO;
+import com.hackatonapi.HackatonRest.DTO.*;
 import com.hackatonapi.HackatonRest.entity.Heist;
 import com.hackatonapi.HackatonRest.entity.HeistStatus;
 import com.hackatonapi.HackatonRest.entity.RequiredSkill;
 import com.hackatonapi.HackatonRest.entity.Skill;
 import com.hackatonapi.HackatonRest.exception.DuplicateResourceEntryException;
 import com.hackatonapi.HackatonRest.exception.HeistTimestampException;
+import com.hackatonapi.HackatonRest.exception.InvalidHeistStatusException;
+import com.hackatonapi.HackatonRest.exception.ResourceNotFoundException;
 import com.hackatonapi.HackatonRest.mappers.HeistMapper;
+import com.hackatonapi.HackatonRest.mappers.MemberMapper;
 import com.hackatonapi.HackatonRest.repository.HeistRepository;
 import com.hackatonapi.HackatonRest.repository.RequiredSkillRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,12 +27,29 @@ public class HeistServiceImpl implements HeistService {
 
     HeistRepository heistRepository;
     HeistMapper heistMapper;
+    MemberMapper memberMapper;
 
     @Autowired
     public HeistServiceImpl(HeistRepository heistRepository,
-                            HeistMapper heistMapper) {
+                            HeistMapper heistMapper,
+                            MemberMapper memberMapper) {
         this.heistRepository = heistRepository;
         this.heistMapper = heistMapper;
+        this.memberMapper = memberMapper;
+    }
+
+    @Override
+    public HeistDTO getHeist(Long id) {
+        Optional<Heist> heistOptional = heistRepository.findById(id);
+        if(!heistOptional.isPresent()){
+            throw new ResourceNotFoundException(
+                    "Heist with id " + id + " does not exist."
+            );
+        }
+
+        Heist heist = heistOptional.get();
+
+        return heistMapper.heistToHeistDTO(heist);
     }
 
     @Override
@@ -55,6 +75,68 @@ public class HeistServiceImpl implements HeistService {
 
         return newHeistDTO;
     }
+
+    @Override
+    public void startHeist(Long heistId) {
+        Optional<Heist> heistOptional = heistRepository.findById(heistId);
+        if(!heistOptional.isPresent()){
+            throw new ResourceNotFoundException(
+                    "Heist with id " + heistId + " does not exist."
+            );
+        }
+
+        Heist heist = heistOptional.get();
+
+        if (heist.getStatus() != HeistStatus.READY){
+            throw new InvalidHeistStatusException(
+                    "Can not start heist. Heist is not in status READY."
+            );
+        }
+
+        heist.setStatus(HeistStatus.IN_PROGRESS);
+        heistRepository.save(heist);
+    }
+
+    @Override
+    public List<CurrentHeistMemberDTO> getHeistMembers(Long heistId) {
+        Optional<Heist> heistOptional = heistRepository.findById(heistId);
+        if(!heistOptional.isPresent()){
+            throw new ResourceNotFoundException(
+                    "Heist with id " + heistId + " does not exist."
+            );
+        }
+
+        Heist heist = heistOptional.get();
+        if(heist.getStatus().equals(HeistStatus.PLANNING)){
+            throw new InvalidHeistStatusException(
+                    "Can not display heist data. " +
+                    "Heist is in status" + heist.getStatus()
+            );
+        }
+
+        List<CurrentHeistMemberDTO> currentMembersDTO = heist
+                .getMembers()
+                .stream()
+                .map(member ->
+                        memberMapper.memberToCurrentHeistMemberDTO(member))
+                .collect(Collectors.toList());
+
+        return currentMembersDTO;
+     }
+
+    @Override
+    public HeistStatusDTO getHeistStatus(Long heistId) {
+        Optional<Heist> heistOptional = heistRepository.findById(heistId);
+        if(!heistOptional.isPresent()){
+            throw new ResourceNotFoundException(
+                    "Heist with id " + heistId + " does not exist."
+            );
+        }
+
+        Heist heist = heistOptional.get();
+        return new HeistStatusDTO(heist.getStatus().name());
+    }
+
 
     private boolean checkTimestampValidity(ZonedDateTime start, ZonedDateTime end){
         if(start.isAfter(end)){

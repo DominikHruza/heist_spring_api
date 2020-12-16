@@ -1,5 +1,6 @@
 package com.hackatonapi.HackatonRest.DTO;
 
+import com.hackatonapi.HackatonRest.entity.HeistStatus;
 import com.hackatonapi.HackatonRest.entity.NamedEntity;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,7 @@ public class HeistDTO extends NamedEntity {
     private ZonedDateTime startTime;
     private ZonedDateTime endTime;
     List<RequiredSkillDTO> skills = new ArrayList<>();
+    private HeistStatus status;
 
 
     public HeistDTO(
@@ -25,11 +27,13 @@ public class HeistDTO extends NamedEntity {
             String location,
             ZonedDateTime startTime,
             ZonedDateTime endTime,
-            List<RequiredSkillDTO> skills) {
+            List<RequiredSkillDTO> skills,
+            HeistStatus status) {
         super(name);
         this.location = location;
         this.startTime = startTime;
         this.endTime = endTime;
         this.skills = skills;
+        this.status = status;
     }
 }

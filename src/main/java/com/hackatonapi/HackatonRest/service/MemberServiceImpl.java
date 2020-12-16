@@ -2,17 +2,17 @@ package com.hackatonapi.HackatonRest.service;
 
 import com.hackatonapi.HackatonRest.DTO.*;
 import com.hackatonapi.HackatonRest.entity.Member;
-import com.hackatonapi.HackatonRest.entity.MemberSkillLevel;
 import com.hackatonapi.HackatonRest.entity.MemberStatus;
 import com.hackatonapi.HackatonRest.entity.Skill;
 import com.hackatonapi.HackatonRest.exception.DuplicateResourceEntryException;
 import com.hackatonapi.HackatonRest.exception.InvalidParticipantException;
 import com.hackatonapi.HackatonRest.exception.NotAMemberSkillException;
 import com.hackatonapi.HackatonRest.exception.ResourceNotFoundException;
-import com.hackatonapi.HackatonRest.helpers.Helpers;
 import com.hackatonapi.HackatonRest.mappers.MemberMapper;
 import com.hackatonapi.HackatonRest.repository.MemberRepository;
 import com.hackatonapi.HackatonRest.repository.SkillRepository;
+import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +33,19 @@ public class MemberServiceImpl implements MemberService {
         this.memberRepository = memberRepository;
         this.skillRepository = skillRepository;
         this.memberMapper = memberMapper;
+    }
+
+    @Override
+    public MemberDTO findMemberById(Long id) {
+        Optional<Member> memberOptional = memberRepository.findById(id);
+        if(!memberOptional.isPresent()){
+            throw new ResourceNotFoundException(
+                    "Member with id " + id + " already exists"
+            );
+        }
+
+        Member member = memberOptional.get();
+        return memberMapper.memberToMemberDTO(member);
     }
 
     @Override
@@ -120,7 +133,8 @@ public class MemberServiceImpl implements MemberService {
     public boolean isValidHeistMember(
             MemberDTO memberDTO,
             List<RequiredSkillDTO> requiredSkillDTOS,
-            ZonedDateTime heistStart) {
+            ZonedDateTime heistStart,
+            ZonedDateTime heistEnd) {
 
         Optional<Member> memberOptional = memberRepository.findByName(memberDTO.getName());
         if(!memberOptional.isPresent()){
@@ -145,7 +159,7 @@ public class MemberServiceImpl implements MemberService {
         }
 
         //Check if member participates in another heist at that time period
-        boolean hasValidTiming = hasValidTiming(heistStart, member);
+        boolean hasValidTiming = hasValidTiming(heistStart, heistEnd, member);
         if(!hasValidTiming){
             throw new InvalidParticipantException(
                     "Member with name " + memberDTO.getName() + " is not available at that time period.");
@@ -181,7 +195,7 @@ public class MemberServiceImpl implements MemberService {
 
         for (MemberSkillDTO memberSkill : memberSkillDTOS) {
 
-            if (memberSkill.getLevel().equals(requiredSkillDTO.getLevel()) && //Check level
+            if (memberSkill.getLevel().length() >= requiredSkillDTO.getLevel().length() && //Check level
                 memberSkill.getName().equals(requiredSkillDTO.getName())) { //Check name
                 return true;
             }
@@ -198,13 +212,31 @@ public class MemberServiceImpl implements MemberService {
         return false;
     }
 
-    private boolean hasValidTiming(ZonedDateTime startTime, Member member){
+    private boolean hasValidTiming(ZonedDateTime startTime, ZonedDateTime endTime, Member member){
 
-        return member.getHeists().stream().anyMatch(heist -> {
-            return Helpers.isWithinRange(
-                    startTime,
-                    heist.getStartTime(),
-                    heist.getEndTime());
+        return !member.getHeists().stream().anyMatch(heist -> {
+
+            Interval otherI = new Interval(
+                    zonedDateTimeToDateTime(startTime),
+                    zonedDateTimeToDateTime((endTime))
+            );
+            Interval thisI = new Interval(
+                    zonedDateTimeToDateTime(heist.getStartTime()),
+                    zonedDateTimeToDateTime(heist.getEndTime())
+            );
+
+            return otherI.overlaps(thisI);
         });
+    }
+
+    private DateTime zonedDateTimeToDateTime(ZonedDateTime zdt) {
+        return new DateTime(
+                zdt.getYear(),
+                zdt.getMonth().ordinal(),
+                zdt.getDayOfMonth(),
+                zdt.getHour(),
+                zdt.getMinute()
+
+        );
     }
 }

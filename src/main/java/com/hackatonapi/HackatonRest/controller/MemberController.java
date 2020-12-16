@@ -2,6 +2,7 @@ package com.hackatonapi.HackatonRest.controller;
 
 
 import com.hackatonapi.HackatonRest.DTO.MemberDTO;
+import com.hackatonapi.HackatonRest.DTO.MemberSkillsInfoDTO;
 import com.hackatonapi.HackatonRest.DTO.UpdateMemberSkillsDTO;
 import com.hackatonapi.HackatonRest.facades.MemberFacade;
 import com.hackatonapi.HackatonRest.service.MemberService;
@@ -54,4 +55,19 @@ public class MemberController {
 
         memberSkillLevelService.deleteMemberSkillLevel(memberId,skillName);
     }
+
+    //SBSS-09-1: Get member
+    @GetMapping(value = "/{member_id}")
+    @ResponseStatus(HttpStatus.OK)
+    public MemberDTO getMember(@PathVariable Long member_id){
+       return memberService.findMemberById(member_id);
+    }
+
+    //SBSS-09-1: Get member skills
+    @GetMapping(value = "/{member_id}/skills")
+    @ResponseStatus(HttpStatus.OK)
+    public MemberSkillsInfoDTO getMemberSkillsInfo(@PathVariable Long member_id){
+        return memberSkillLevelService.getMemberSkills(member_id);
+    }
+
 }

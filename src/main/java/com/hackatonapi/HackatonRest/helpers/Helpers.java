@@ -38,6 +38,7 @@ public final class Helpers {
             ZonedDateTime dateTime,
             ZonedDateTime start,
             ZonedDateTime end){
-        return !(dateTime.isBefore(start) || dateTime.isAfter(end));
+        boolean b = !(dateTime.isBefore(start) || dateTime.isAfter(end));
+        return b;
     }
 }

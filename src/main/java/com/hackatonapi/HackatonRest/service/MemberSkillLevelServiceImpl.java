@@ -1,8 +1,10 @@
 package com.hackatonapi.HackatonRest.service;
 
 import com.hackatonapi.HackatonRest.DTO.MemberSkillDTO;
+import com.hackatonapi.HackatonRest.DTO.MemberSkillsInfoDTO;
 import com.hackatonapi.HackatonRest.DTO.RequiredSkillDTO;
 import com.hackatonapi.HackatonRest.DTO.UpdateMemberSkillsDTO;
+import com.hackatonapi.HackatonRest.entity.Heist;
 import com.hackatonapi.HackatonRest.entity.Member;
 import com.hackatonapi.HackatonRest.entity.MemberSkillLevel;
 import com.hackatonapi.HackatonRest.entity.Skill;
@@ -65,6 +67,30 @@ public class MemberSkillLevelServiceImpl implements MemberSkillLevelService {
     }
 
     @Override
+    public MemberSkillsInfoDTO getMemberSkills(Long memberId) {
+        //Find member in db
+        Optional<Member> memberOpt = memberRepository.findById(memberId);
+        if (!memberOpt.isPresent()) {
+            throw new ResourceNotFoundException("Member with id " + memberId + " does not exist.");
+        }
+        Member member = memberOpt.get();
+
+
+        List<MemberSkillDTO> memberSkillDTOS = member
+                .getMemberSkillLevels()
+                .stream()
+                .map(memberSkillLevel ->
+                        skillLevelMapper.skillLevelToSkillLevelDTO(memberSkillLevel))
+                .collect(Collectors.toList());
+
+
+        return new MemberSkillsInfoDTO(
+                memberSkillDTOS,
+                member.getMainSkill().getName()
+        );
+    }
+
+    @Override
     public List<MemberSkillDTO> bulkSaveMemberSkillLevel(
             List<MemberSkillDTO> memberSkillDTOS, String memberName) {
 
@@ -108,6 +134,8 @@ public class MemberSkillLevelServiceImpl implements MemberSkillLevelService {
         memberSkillLevelRepository.delete(memberSkillLevel);
         member.getMemberSkillLevels().remove(memberSkillLevel);
     }
+
+
 
     private MemberSkillLevel createMemberSkill(Member member, MemberSkillDTO memberSkillDTO) {
         //Find skill in db or insert to skill table if this is first usage

@@ -63,6 +63,27 @@ public class RequiredSkillsServiceImpl implements RequiredSkillsService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<RequiredSkillDTO> getRequiredSkills(Long heistId) {
+        Optional<Heist> heistOptional = heistRepository.findById(heistId);
+        if(!heistOptional.isPresent()){
+            throw new ResourceNotFoundException(
+                    "Heist with id " + heistId + " does not exist."
+            );
+        }
+        Heist heist = heistOptional.get();
+
+        List<RequiredSkillDTO> requiredSkillDTOS = heist
+                .getRequiredSkillList()
+                .stream()
+                .map(requiredSkill ->
+                        requiredSkillMapper
+                                .requiredSkillToRequiredSkillDTO(requiredSkill))
+                .collect(Collectors.toList());
+
+        return requiredSkillDTOS ;
+    }
+
     private List<RequiredSkillDTO> saveToRequiredSkillList(Heist heist ,List<RequiredSkillDTO> requiredSkillDTOs){
         if(Helpers.checkForDuplicates(requiredSkillDTOs)){
             throw new DuplicateResourceEntryException(
