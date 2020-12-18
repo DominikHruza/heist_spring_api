@@ -60,7 +60,7 @@ public class MemberController {
     @GetMapping(value = "/{member_id}")
     @ResponseStatus(HttpStatus.OK)
     public MemberDTO getMember(@PathVariable Long member_id){
-       return memberService.findMemberById(member_id);
+       return memberService.findMember(member_id);
     }
 
     //SBSS-09-1: Get member skills

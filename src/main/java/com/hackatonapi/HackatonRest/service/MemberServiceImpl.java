@@ -15,6 +15,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -36,7 +37,7 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public MemberDTO findMemberById(Long id) {
+    public MemberDTO findMember(Long id) {
         Optional<Member> memberOptional = memberRepository.findById(id);
         if(!memberOptional.isPresent()){
             throw new ResourceNotFoundException(
@@ -49,6 +50,20 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
+    public MemberDTO findMember(String name) {
+        Optional<Member> memberOptional = memberRepository.findByName(name);
+        if(!memberOptional.isPresent()){
+            throw new ResourceNotFoundException(
+                    "Member with name " + name + " already exists"
+            );
+        }
+
+        Member member = memberOptional.get();
+        return memberMapper.memberToMemberDTO(member);
+    }
+
+    @Override
+    @Transactional
     public MemberDTO addMember(MemberDTO memberDTO) {
 
         //Construct new member
@@ -77,8 +92,8 @@ public class MemberServiceImpl implements MemberService {
         );
     }
 
-
     @Override
+    @Transactional
     public MainSkillDTO setMainSkill(String memberName, String skillName){
 
         Optional<Member> memberOptional = memberRepository.findByName(memberName);
@@ -100,8 +115,6 @@ public class MemberServiceImpl implements MemberService {
         }
 
         member.setMainSkill(skill);
-        memberRepository.save(member);
-
         return new MainSkillDTO(member.getMainSkill().getName());
     }
 
@@ -129,6 +142,7 @@ public class MemberServiceImpl implements MemberService {
 
         return matchingMembersDTOs;
     }
+
     @Override
     public boolean isValidHeistMember(
             MemberDTO memberDTO,
@@ -168,6 +182,31 @@ public class MemberServiceImpl implements MemberService {
         return true;
     }
 
+    @Override
+    @Transactional
+    public void bulkChangeStatus(List<CurrentHeistMemberDTO> members, Double percentage, MemberStatus status) {
+        //Calculate how many members will have their status changed based on percentage parameter
+        Integer numOfChanges = Math.toIntExact(Math.round((members.size() * percentage)));
+
+        for (int i = 0; i < numOfChanges; i++) {
+            //Shuffle members DTO
+            Collections.shuffle(members);
+            String memberName = members.get(0).getName();
+            //Find member in db based on name in DTO
+            Member member = memberRepository.findByName(memberName).get();
+            //Change status
+            if(status == null){
+                MemberStatus resultingStatus = MemberStatus.randBetweenTwo(
+                        MemberStatus.INCARCERATED,
+                        MemberStatus.EXPIRED);
+                member.setStatus(resultingStatus);
+            } else {
+                member.setStatus(status);
+            }
+            //Ensure that same member does not show up again in the shuffle
+            members.remove(0);
+        }
+    }
 
     private boolean hasRequiredSkills(
             List<MemberSkillDTO> memberSkillDTOS,

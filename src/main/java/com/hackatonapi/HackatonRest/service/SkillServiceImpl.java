@@ -3,6 +3,7 @@ package com.hackatonapi.HackatonRest.service;
 import com.hackatonapi.HackatonRest.entity.Skill;
 import com.hackatonapi.HackatonRest.repository.SkillRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -15,11 +16,12 @@ public class SkillServiceImpl implements SkillService {
     }
 
     @Override
+    @Transactional
     public Skill findOrInsertSkill(String name) {
         Skill skill = new Skill();
         Optional<Skill> skillOptional = skillRepository.findByName(name);
         if (!skillOptional.isPresent()) {
-            skill = skillRepository.saveAndFlush(new Skill(name));
+            skill = skillRepository.save(new Skill(name));
         } else {
             skill = skillOptional.get();
         }

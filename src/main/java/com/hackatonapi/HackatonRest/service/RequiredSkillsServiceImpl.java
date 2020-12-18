@@ -11,6 +11,7 @@ import com.hackatonapi.HackatonRest.mappers.RequiredSkillMapper;
 import com.hackatonapi.HackatonRest.repository.HeistRepository;
 import com.hackatonapi.HackatonRest.repository.RequiredSkillRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +39,7 @@ public class RequiredSkillsServiceImpl implements RequiredSkillsService {
     }
 
     @Override
+    @Transactional
     public List<RequiredSkillDTO> bulkAddRequiredSkills(
             String heistName,
             List<RequiredSkillDTO> requiredSkillDTOs) {

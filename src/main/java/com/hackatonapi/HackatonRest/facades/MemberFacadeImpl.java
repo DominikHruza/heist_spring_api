@@ -11,6 +11,7 @@ import com.hackatonapi.HackatonRest.service.MemberSkillLevelService;
 import com.hackatonapi.HackatonRest.service.SkillService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +38,7 @@ public class MemberFacadeImpl implements MemberFacade {
     }
 
     @Override
+    @Transactional
     public MemberDTO addNewMember(MemberDTO memberDTO) {
         //Save if any new skills in dto
         memberDTO.getSkills()
@@ -60,18 +62,13 @@ public class MemberFacadeImpl implements MemberFacade {
         savedMemberDto.setMainSkill(mainSkillDTO.getName());
 
         return savedMemberDto;
-
     }
 
     @Override
+    @Transactional
     public void updateSkillsAndMainSkill(UpdateMemberSkillsDTO skillsData, Long memberId) {
-        //Find member
-        Optional<Member> memberOpt = memberRepository.findById(memberId);
-        if(!memberOpt.isPresent()){
-            throw new ResourceNotFoundException("Member with id " + memberId + " does not exists.");
-        }
+        MemberDTO member = memberService.findMember(memberId);
 
-        Member member = memberOpt.get();
         //Update skill list
         if (skillsData.getSkills().isPresent()) {
             List<MemberSkillDTO> memberSkillDTOS = skillsData.getSkills().get();

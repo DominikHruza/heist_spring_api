@@ -1,9 +1,6 @@
 package com.hackatonapi.HackatonRest.facades;
 
-import com.hackatonapi.HackatonRest.DTO.EligibleMembersDTO;
-import com.hackatonapi.HackatonRest.DTO.HeistDTO;
-import com.hackatonapi.HackatonRest.DTO.ParticipantsDTO;
-import com.hackatonapi.HackatonRest.DTO.UpdateRequiredSkillsDTO;
+import com.hackatonapi.HackatonRest.DTO.*;
 import org.springframework.stereotype.Component;
 
 
@@ -12,4 +9,5 @@ public interface HeistFacade {
    void updateRequiredSkills(Long heistId, UpdateRequiredSkillsDTO requiredSkillDTOs);
    EligibleMembersDTO getEligibleMembers(Long heistId);
    void confirmParticipants(Long heistId, ParticipantsDTO participants);
+   OutcomeDTO getHeistOutcome(Long id);
 }

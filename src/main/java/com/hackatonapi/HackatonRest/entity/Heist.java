@@ -30,6 +30,9 @@ public class Heist extends NamedEntity{
     @ManyToMany(mappedBy = "heists")
     List<Member> members = new ArrayList<>();
 
+    @Enumerated
+    HeistOutcome outcome;
+
     public Heist() {}
 
     public Heist(String name, String location, ZonedDateTime startTime, ZonedDateTime endTime, HeistStatus status) {

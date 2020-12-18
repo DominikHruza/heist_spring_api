@@ -15,6 +15,7 @@ import com.hackatonapi.HackatonRest.mappers.SkillLevelMapperImpl;
 import com.hackatonapi.HackatonRest.repository.MemberRepository;
 import com.hackatonapi.HackatonRest.repository.MemberSkillLevelRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -40,6 +41,7 @@ public class MemberSkillLevelServiceImpl implements MemberSkillLevelService {
     }
 
     @Override
+    @Transactional
     public MemberSkillDTO saveMemberSkillLevel(MemberSkillDTO memberSkillDTO, String memberName) {
         //Find member in db
         Optional<Member> memberOpt = memberRepository.findByName(memberName);
@@ -91,6 +93,7 @@ public class MemberSkillLevelServiceImpl implements MemberSkillLevelService {
     }
 
     @Override
+    @Transactional
     public List<MemberSkillDTO> bulkSaveMemberSkillLevel(
             List<MemberSkillDTO> memberSkillDTOS, String memberName) {
 
