@@ -11,5 +11,5 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 @Component
 public class OutcomeDTO {
-    HeistOutcome outcome;
+    String outcome;
 }

@@ -3,6 +3,7 @@ package com.hackatonapi.HackatonRest.controller;
 import com.hackatonapi.HackatonRest.DTO.*;
 import com.hackatonapi.HackatonRest.facades.HeistFacade;
 import com.hackatonapi.HackatonRest.service.HeistService;
+import com.hackatonapi.HackatonRest.service.MailService;
 import com.hackatonapi.HackatonRest.service.RequiredSkillsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -16,14 +17,17 @@ public class HeistController {
     private final HeistFacade heistFacade;
     private final HeistService heistService;
     private final RequiredSkillsService requiredSkillsService;
+    private final MailService mailService;
 
 
     public HeistController(HeistFacade heistFacade,
                            HeistService heistService,
-                           RequiredSkillsService requiredSkillsService) {
+                           RequiredSkillsService requiredSkillsService,
+                           MailService mailService) {
         this.heistFacade = heistFacade;
         this.heistService = heistService;
         this.requiredSkillsService = requiredSkillsService;
+        this.mailService = mailService;
     }
 
 
@@ -56,6 +60,13 @@ public class HeistController {
     @PutMapping(value = "/{heist_id}/members")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void confirmParticipants(@PathVariable Long heist_id, @RequestBody ParticipantsDTO participants){
+//        String msg = "You have been added to a new heist starting at ";
+//        mailService.sendMail(
+//                "dominik.hruza@ag04.com",
+//                "Member of a new heist!",
+//                msg
+//        );
+
         heistFacade.confirmParticipants(heist_id, participants);
     }
 
@@ -92,5 +103,12 @@ public class HeistController {
     @ResponseStatus(HttpStatus.OK)
     public HeistStatusDTO getHeistStatus(@PathVariable Long heist_id){
         return heistService.getHeistStatus(heist_id);
+    }
+
+    //SBSS-11: Get heist outcome
+    @GetMapping(value = "/{heist_id}/outcome")
+    @ResponseStatus(HttpStatus.OK)
+    public OutcomeDTO getHeistOutcome(@PathVariable Long heist_id){
+        return heistFacade.getHeistOutcome(heist_id);
     }
 }

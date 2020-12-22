@@ -9,6 +9,7 @@ import com.hackatonapi.HackatonRest.exception.ResourceNotFoundException;
 import com.hackatonapi.HackatonRest.mappers.HeistMapper;
 import com.hackatonapi.HackatonRest.mappers.MemberMapper;
 import com.hackatonapi.HackatonRest.repository.HeistRepository;
+import com.hackatonapi.HackatonRest.repository.MemberRepository;
 import com.hackatonapi.HackatonRest.repository.RequiredSkillRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,14 +27,17 @@ public class HeistServiceImpl implements HeistService {
     HeistRepository heistRepository;
     HeistMapper heistMapper;
     MemberMapper memberMapper;
+    MemberRepository memberRepository;
 
     @Autowired
     public HeistServiceImpl(HeistRepository heistRepository,
                             HeistMapper heistMapper,
-                            MemberMapper memberMapper) {
+                            MemberMapper memberMapper,
+                            MemberRepository memberRepository) {
         this.heistRepository = heistRepository;
         this.heistMapper = heistMapper;
         this.memberMapper = memberMapper;
+        this.memberRepository = memberRepository;
     }
 
     @Override
@@ -151,8 +155,24 @@ public class HeistServiceImpl implements HeistService {
     }
 
     @Override
+    @Transactional
     public void addMemberToHeist(Long id, String memberName) {
+        Optional<Member> memberOptional = memberRepository.findByName(memberName);
+        Optional<Heist> heistOptional = heistRepository.findById(id);
 
+        if(!memberOptional.isPresent()){
+            throw new ResourceNotFoundException("Member with name " + memberName + " not found");
+        }
+
+        if(!heistOptional.isPresent()){
+            throw new ResourceNotFoundException("Heist with id " + id + " not found");
+        }
+
+        Member member = memberOptional.get();
+        Heist heist = heistOptional.get();
+
+        member.addToHeists(heist);
+        heist.addToMembers(member);
     }
 
     @Override
@@ -172,7 +192,7 @@ public class HeistServiceImpl implements HeistService {
 
     @Override
     @Transactional
-    public void setHeistOutcome(Long id, HeistOutcome outcome) {
+    public HeistOutcome setHeistOutcome(Long id, HeistOutcome outcome) {
         Optional<Heist> heistOptional = heistRepository.findById(id);
         if(!heistOptional.isPresent()){
             throw new ResourceNotFoundException(
@@ -181,11 +201,12 @@ public class HeistServiceImpl implements HeistService {
         }
         Heist heist = heistOptional.get();
         heist.setOutcome(outcome);
+        return heist.getOutcome();
     }
 
     @Override
     @Transactional
-    public void setHeistOutcome(Long id) {
+    public HeistOutcome setHeistOutcome(Long id) {
         Optional<Heist> heistOptional = heistRepository.findById(id);
         if(!heistOptional.isPresent()){
             throw new ResourceNotFoundException(
@@ -193,7 +214,9 @@ public class HeistServiceImpl implements HeistService {
             );
         }
         Heist heist = heistOptional.get();
-        heist.setOutcome(HeistOutcome.getRandomOutcome());
+        HeistOutcome randOutcome = HeistOutcome.getRandomOutcome();
+        heist.setOutcome(randOutcome);
+        return randOutcome;
     }
 
     private boolean checkTimestampValidity(ZonedDateTime start, ZonedDateTime end){

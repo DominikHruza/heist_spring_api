@@ -1,10 +1,6 @@
 package com.hackatonapi.HackatonRest.service;
 
-import com.hackatonapi.HackatonRest.DTO.MemberSkillDTO;
-import com.hackatonapi.HackatonRest.DTO.MemberSkillsInfoDTO;
-import com.hackatonapi.HackatonRest.DTO.RequiredSkillDTO;
-import com.hackatonapi.HackatonRest.DTO.UpdateMemberSkillsDTO;
-import com.hackatonapi.HackatonRest.entity.Heist;
+import com.hackatonapi.HackatonRest.DTO.*;
 import com.hackatonapi.HackatonRest.entity.Member;
 import com.hackatonapi.HackatonRest.entity.MemberSkillLevel;
 import com.hackatonapi.HackatonRest.entity.Skill;
@@ -14,6 +10,9 @@ import com.hackatonapi.HackatonRest.helpers.Helpers;
 import com.hackatonapi.HackatonRest.mappers.SkillLevelMapperImpl;
 import com.hackatonapi.HackatonRest.repository.MemberRepository;
 import com.hackatonapi.HackatonRest.repository.MemberSkillLevelRepository;
+import org.joda.time.DateTime;
+import org.joda.time.Seconds;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +27,8 @@ public class MemberSkillLevelServiceImpl implements MemberSkillLevelService {
     private final SkillLevelMapperImpl skillLevelMapper;
     private final SkillService skillService;
 
+    @Value("${levelUp.seconds}")
+    private String nextLevelAfter;
 
     public MemberSkillLevelServiceImpl(
             MemberRepository memberRepository,
@@ -138,7 +139,34 @@ public class MemberSkillLevelServiceImpl implements MemberSkillLevelService {
         member.getMemberSkillLevels().remove(memberSkillLevel);
     }
 
+    @Override
+    @Transactional
+    public void LevelUpSkills(String memberName, HeistDTO heistDTO) {
+        //Calculate heist length in seconds
+        DateTime start = Helpers.zonedDateTimeToDateTime(heistDTO.getStartTime());
+        DateTime end = Helpers.zonedDateTimeToDateTime(heistDTO.getEndTime());
+        Long heistLength = (long) Seconds.secondsBetween(start, end).getSeconds();
 
+        //Find member in db
+        Optional<Member> memberOpt = memberRepository.findByName(memberName);
+        if (!memberOpt.isPresent()) {
+            throw new ResourceNotFoundException("Member with id " + memberName + " does not exist.");
+        }
+        Member member = memberOpt.get();
+
+        //Loop required skill
+        for (var requiredSkill:
+             heistDTO.getSkills()) {
+            //Find matching member skill
+            Optional<MemberSkillLevel> skillLevelOptional = member.getMemberSkillLevels()
+                    .stream()
+                    .filter(o -> o.getSkill().getName().equals(requiredSkill.getName())).findFirst();
+            if(skillLevelOptional.isPresent()){
+                MemberSkillLevel skillLevel = skillLevelOptional.get();
+                makeXpUpdates(skillLevel, heistLength);
+            }
+        }
+    }
 
     private MemberSkillLevel createMemberSkill(Member member, MemberSkillDTO memberSkillDTO) {
         //Find skill in db or insert to skill table if this is first usage
@@ -159,5 +187,23 @@ public class MemberSkillLevelServiceImpl implements MemberSkillLevelService {
         memberSkillLevel.setLevel(memberSkillDTO.getLevel());
         memberSkillLevelRepository.save(memberSkillLevel);
         return skillLevelMapper.skillLevelToSkillLevelDTO(memberSkillLevel);
+    }
+
+    private void makeXpUpdates(MemberSkillLevel skillLevel, Long heistLength) {
+        //Add current time spent on heist to existing xp in db
+        Long updatedXp = skillLevel.getXpSeconds() + heistLength;
+        Long levelUpCap = Long.parseLong(nextLevelAfter);
+        //Calculate how much xp until next level
+        Long leftUntilNextLevel = updatedXp - levelUpCap;
+        //If result is positive and skill not maxed-> level up and save remainder
+        //else just update xp
+        if (leftUntilNextLevel >= 0 &&
+                skillLevel.getLevel().length() != 10) {
+
+            skillLevel.setLevel(skillLevel.getLevel() + "*");
+            skillLevel.setXpSeconds(leftUntilNextLevel);
+        } else {
+            skillLevel.setXpSeconds(updatedXp);
+        }
     }
 }

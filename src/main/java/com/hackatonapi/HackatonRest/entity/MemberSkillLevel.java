@@ -20,6 +20,9 @@ public class MemberSkillLevel extends GradedEntity {
     @ManyToOne
     Member member;
 
+    @Column(nullable = false)
+    Long xpSeconds = 0L;
+
     public MemberSkillLevel() {}
 
     public MemberSkillLevel(Skill skill, Member member,String level) {

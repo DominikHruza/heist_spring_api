@@ -186,7 +186,7 @@ public class MemberServiceImpl implements MemberService {
     @Transactional
     public void bulkChangeStatus(List<CurrentHeistMemberDTO> members, Double percentage, MemberStatus status) {
         //Calculate how many members will have their status changed based on percentage parameter
-        Integer numOfChanges = Math.toIntExact(Math.round((members.size() * percentage)));
+        Integer numOfChanges = (int) Math.ceil((members.size() * percentage));
 
         for (int i = 0; i < numOfChanges; i++) {
             //Shuffle members DTO
@@ -196,6 +196,7 @@ public class MemberServiceImpl implements MemberService {
             Member member = memberRepository.findByName(memberName).get();
             //Change status
             if(status == null){
+                // if status not set in method param: randomize
                 MemberStatus resultingStatus = MemberStatus.randBetweenTwo(
                         MemberStatus.INCARCERATED,
                         MemberStatus.EXPIRED);

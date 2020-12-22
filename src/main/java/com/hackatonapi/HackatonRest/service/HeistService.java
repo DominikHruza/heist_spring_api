@@ -15,6 +15,6 @@ public interface HeistService {
     void changeStatus(Long id, HeistStatus status);
     void addMemberToHeist(Long id, String memberName);
     Double calculateMembersPercentage(Long heistId);
-    void setHeistOutcome(Long id, HeistOutcome outcome);
-    void setHeistOutcome(Long id);
+    HeistOutcome setHeistOutcome(Long id, HeistOutcome outcome);
+    HeistOutcome setHeistOutcome(Long id);
 }

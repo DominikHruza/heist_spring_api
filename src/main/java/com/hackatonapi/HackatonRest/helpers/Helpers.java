@@ -1,6 +1,8 @@
 package com.hackatonapi.HackatonRest.helpers;
 
 import com.hackatonapi.HackatonRest.entity.NamedEntity;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import java.time.ZonedDateTime;
 import java.util.HashSet;
@@ -40,5 +42,9 @@ public final class Helpers {
             ZonedDateTime end){
         boolean b = !(dateTime.isBefore(start) || dateTime.isAfter(end));
         return b;
+    }
+
+    public static DateTime zonedDateTimeToDateTime(final ZonedDateTime zdt) {
+        return new DateTime(zdt.toInstant().toEpochMilli(), DateTimeZone.forID(zdt.getOffset().getId()));
     }
 }
